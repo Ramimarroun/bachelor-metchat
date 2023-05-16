@@ -1,15 +1,23 @@
-const express = require('express');
+const express = require("express");
+const { verifyaccess } = require("../services/authorization");
 const app = express();
-const messages = require('../services/messages');
+const messages = require("../services/messages");
 
+app.post("/init", verifyaccess, messages.init);
 
-app.post('/send', messages.send);
+app.post(`/`, verifyaccess, messages.add);
 
+<<<<<<< HEAD
 app.get('/getConversation/:conversationId', messages.getConversation);
+=======
+app.get(`/:conversationId`, verifyaccess, messages.getAllMessages);
+>>>>>>> origin/master
 
-app.get('/getMessage/:messageId', messages.getMessage);
+app.put(`/seen`, messages.seen);
 
+app.delete(`/:messageId`, messages.delete);
 
+<<<<<<< HEAD
 app.put('/edit', messages.edit);
 
 app.delete('/delete', messages.delete);
@@ -30,3 +38,6 @@ app.get('/conversations/:conversationId/messages', async (req, res) => {
   
 
 module.exports = app;
+=======
+module.exports = app;
+>>>>>>> origin/master

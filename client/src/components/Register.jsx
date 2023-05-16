@@ -1,143 +1,198 @@
-import React, { useState } from "react";
+import { Field, Form, Formik } from "formik";
+import { React, useState } from "react";
+import * as yup from "yup";
+import { Flex } from "./Flex";
+import { Modal } from "react-bootstrap";
+import { accountApi } from "../api/account-api";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { authenticationRoute } from "../APIRoutes";
+import { useAccount } from "../app/account-context";
 
-function Register() {
-  const navigate = useNavigate();
+export const Register = ({ registerFormRef, setModel, model }) => {
+  const history = useNavigate();
+  const account = useAccount();
 
-  const [values, setValues] = useState({
-    fname: "",
-    lname: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const onSubmitRegister = () => {
+    const values = registerFormRef.current.values;
+    accountApi
+      .register(values)
+      .then(() => {
+        setModel({ ...model, showRegisterModal: false });
 
-  const handleChange = (event) => {
-    setValues({ ...values, [event.target.name]: event.target.value });
+        account
+          .login(values.email, values.password)
+          .then(() => history("/interests"))
+          .catch(() => alert("Error in Login"));
+      })
+      .catch(() => alert("error!"));
   };
-
-  const handleValidation = () => {
-    const { fname, lname, email, password, confirmPassword } = values;
-    if (password !== confirmPassword) {
-      alert("Feltene for passord er ikke like.");
-      return false;
-    } else if (fname.length < 3 && fname.length > 30) {
-      alert("Fornavn må være minst tre bokstaver.");
-      return false;
-    } else if (lname.length < 2 && lname.length > 30) {
-      alert("Etternavn må være minst to bokstaver.");
-      return false;
-    } else if (
-      !/^[a-zæøåA-ZÆØÅ()]+$/.test(fname) ||
-      !/^[a-zæøåA-ZÆØÅ()]+$/.test(lname)
-    ) {
-      alert(
-        "Navnet ditt kan bare bestå av bokstaver fra det norske alfabetet."
-      );
-      return false;
-    } else if (password.length < 8 && password.length > 50) {
-      alert("Passordet må være minst åtte(8) tegn.");
-      return false;
-    } else if (
-      !/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(
-        email
-      )
-    ) {
-      alert("E-post er i feil format.");
-      return false;
-    } // regex for e-post
-
-    return true;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (handleValidation()) {
-      const { fname, lname, email, password } = values;
-      await axios
-        .post(`${authenticationRoute}/register`, {
-          firstName: fname,
-          lastName: lname,
-          email,
-          password,
-        })
-        .then((response) => {
-          localStorage.setItem(
-            "metchat-user",
-            JSON.stringify(response.data.user)
-          );
-          alert("Bruker opprettet"); // Noe bedre å si?
-          navigate("/merInfo");
-        })
-        .catch((err) => {
-          alert(err.response.data);
-        });
-    }
-  };
-
   return (
-    <div className="content active-content" id="reg-content">
-      <form id="form-reg" onSubmit={(e) => handleSubmit(e)}>
-        <div className="form-row">
-          <label>Fornavn</label>
-          <input
-            type="text"
-            name="fname"
-            required
-            id="first_name"
-            onChange={(e) => handleChange(e)}
-          />
-        </div>
-        <div className="form-row">
-          <label>Etternavn</label>
-          <input
-            type="text"
-            name="lname"
-            required
-            id="last_name"
-            onChange={(e) => handleChange(e)}
-          />
-        </div>
-        <div className="form-row">
-          <label>Epost</label>
-          <input
-            type="text"
-            name="email"
-            required
-            id="email_reg"
-            onChange={(e) => handleChange(e)}
-          />
-        </div>
-        <div className="form-row">
-          <label>Passord</label>
-          <input
-            type="password"
-            name="password"
-            required
-            id="password_reg"
-            onChange={(e) => handleChange(e)}
-          />
-        </div>
-        <div className="form-row">
-          <label>Gjenta Passord</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            required
-            id="repeat_passowrd"
-            onChange={(e) => handleChange(e)}
-          />
-        </div>
-        <div className="form-row">
-          <button className="btn button-reg" type="submit">
-            Registrer
-          </button>
-        </div>
-      </form>
+    <div id="reg" className="pb-5">
+      <Formik
+        initialValues={{
+          firstName: "",
+          lastName: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        }}
+        validationSchema={yup.object({
+          firstName: yup.string().required("Required"),
+          lastName: yup.string().required("Required "),
+          email: yup.string().required(" Required"),
+
+          password: yup
+            .string()
+            .required("Required")
+            .min(6, "password-minimum-length-is-6-characters"),
+          confirmPassword: yup
+            .string()
+            .required("Required")
+            .oneOf([yup.ref("password"), null], "passwords-must-match"),
+        })}
+        onSubmit={() =>
+          setModel({
+            ...model,
+            showRegisterModal: true,
+          })
+        }
+        innerRef={registerFormRef}
+      >
+        {({ errors, touched }) => (
+          <Form id="form_reg">
+            <div className="form-row">
+              <label>Fornavn</label>
+              <Field name="firstName">
+                {({ field }) => <input id="first_name" {...field} />}
+              </Field>
+              {errors.firstName && touched.firstName ? (
+                <div className="text-warning">{errors.firstName}</div>
+              ) : null}
+            </div>
+            <div className="form-row">
+              <label>Etternavn</label>
+              <Field name="lastName">
+                {({ field }) => <input id="last_name" {...field} />}
+              </Field>
+              {errors.lastName && touched.lastName ? (
+                <div className="text-warning">{errors.lastName}</div>
+              ) : null}
+            </div>
+            <div className="form-row">
+              <label>E-post</label>
+              <Field name="email">
+                {({ field }) => <input id="email_reg" {...field} />}
+              </Field>
+              {errors.email && touched.email ? (
+                <div className="text-warning">{errors.email}</div>
+              ) : null}
+            </div>
+            <div className="form-row">
+              <label>Passord</label>
+              <Field name="password">
+                {({ field }) => (
+                  <input type="password" id="password_reg" {...field} />
+                )}
+              </Field>
+              {errors.password && touched.password ? (
+                <div className="text-warning">{errors.password}</div>
+              ) : null}
+            </div>
+            <div className="form-row">
+              <label>Gjenta Passord</label>
+              <Field name="confirmPassword">
+                {({ field }) => (
+                  <input type="password" id="password_reg" {...field} />
+                )}
+              </Field>
+              {errors.confirmPassword && touched.confirmPassword ? (
+                <div className="text-warning">{errors.confirmPassword}</div>
+              ) : null}
+            </div>
+
+            <Flex content="center" className="mt-5">
+              <button type="submit" className="btn">
+                Register
+              </button>
+            </Flex>
+          </Form>
+        )}
+      </Formik>
+      <Toc
+        show={model.showRegisterModal}
+        onHide={() => setModel({ ...model, showRegisterModal: false })}
+        onSubmitHandler={onSubmitRegister}
+      />
     </div>
   );
-}
+};
 
-export default Register;
+const Toc = ({ show, onHide, onSubmitHandler }) => {
+  const [acceptToc, setAcceptToc] = useState(false);
+  return (
+    <Modal show={show} onHide={onHide} size="xl">
+      <Modal.Body className="p-0">
+        <div className="heading">
+          <Flex content="center" align="center" className="text-muted">
+            Vilkår for tjenesten
+          </Flex>
+        </div>
+        <div className="scroll-div-object text-muted">
+          <p>
+            Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+            Repellendus expedita iusto, eaque, aut maiores quas at unde delectus
+            eius voluptatum, corrupti ex vitae commodi dolorem in quaerat cumque
+            labore repellat!
+          </p>
+          <p>
+            Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+            Repellendus expedita iusto, eaque, aut maiores quas at unde delectus
+            eius voluptatum, corrupti ex vitae commodi dolorem in quaerat cumque
+            labore repellat!
+          </p>
+          <p>
+            Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+            Repellendus expedita iusto, eaque, aut maiores quas at unde delectus
+            eius voluptatum, corrupti ex vitae commodi dolorem in quaerat cumque
+            labore repellat!
+          </p>
+          <p>
+            Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+            Repellendus expedita iusto, eaque, aut maiores quas at unde delectus
+            eius voluptatum, corrupti ex vitae commodi dolorem in quaerat cumque
+            labore repellat!
+          </p>
+          <p>
+            Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+            Repellendus expedita iusto, eaque, aut maiores quas at unde delectus
+            eius voluptatum, corrupti ex vitae commodi dolorem in quaerat cumque
+            labore repellat!
+          </p>
+        </div>
+        <div className="btns">
+          <Flex vertical content="center" align="center">
+            <Flex align="center">
+              <input
+                type="checkbox"
+                className="me-2"
+                onChange={(e) => setAcceptToc(e.target.checked)}
+              />
+              <label> Jeg har lest alt og samtrykker.</label>
+            </Flex>
+            <Flex gap={2}>
+              <button className="btn ms-0 mb-3 text-dark" onClick={onHide}>
+                Tilbake
+              </button>
+              <button
+                className="btn mb-3 text-dark"
+                disabled={!acceptToc}
+                onClick={onSubmitHandler}
+              >
+                Gå videre
+              </button>
+            </Flex>
+          </Flex>
+        </div>
+      </Modal.Body>
+    </Modal>
+  );
+};
