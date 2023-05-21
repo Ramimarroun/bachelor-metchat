@@ -16,6 +16,8 @@ app.get("/mycontacts", verifyaccess, contacts.myContacts);
 
 app.get("/all-contacts", verifyaccess, contacts.allContacts);
 
+app.update("/update", verifyaccess, contacts.update);
+
 app.get("/getUser/:userId", /*verifyaccess,*/ contacts.getUser);
 
 app.get("/getAllUsers", /*verifyaccess,*/ contacts.getAllUsers);
