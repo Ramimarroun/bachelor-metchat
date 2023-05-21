@@ -2,23 +2,27 @@ const express = require("express");
 const { verifyaccess } = require("../services/authorization");
 const app = express();
 const messages = require("../services/messages");
+const adminMessages = require("../services/messagesAdmin");
 
 app.post("/init", verifyaccess, messages.init);
 
 app.post(`/`, verifyaccess, messages.add);
 
-app.get("/getConversation/:conversationId", messages.getConversation);
 app.get(`/:conversationId`, verifyaccess, messages.getAllMessages);
 
 app.put(`/seen`, messages.seen);
 
 app.delete(`/:messageId`, messages.delete);
 
-app.put("/edit", messages.edit);
+app.post("/send", adminMessages.send);
 
-app.delete("/delete", messages.delete);
+app.get("/getConversation/:conversationId", adminMessages.getConversation);
 
-app.put("/seen", messages.seen);
+app.get("/getMessage/:messageId", adminMessages.getMessage);
+
+app.put("/edit", adminMessages.edit);
+
+app.delete("/delete", adminMessages.delete);
 
 app.get("/conversations/:conversationId/messages", async (req, res) => {
   const { conversationId } = req.params;
