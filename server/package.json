@@ -17,7 +17,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "back": "nodemon server/server.js"
+    "back": "nodemon index.js"
   },
   "description": "A real web application template.\r =======",
   "main": "index.js",

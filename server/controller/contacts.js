@@ -16,12 +16,10 @@ app.get("/mycontacts", verifyaccess, contacts.myContacts);
 
 app.get("/all-contacts", verifyaccess, contacts.allContacts);
 
-<<<<<<< HEAD
 app.get("/getUser/:userId", /*verifyaccess,*/ contacts.getUser)
 
 app.get("/getAllUsers", /*verifyaccess,*/ contacts.getAllUsers)
-=======
+
 app.get("/update", verifyaccess, contacts.UpdateMyContact);
->>>>>>> origin/master
 
 module.exports = app;

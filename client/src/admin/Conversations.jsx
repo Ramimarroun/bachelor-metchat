@@ -192,6 +192,7 @@ export default function Conversations() {
                           {conversation.fromData.firstName}{" "}
                           {conversation.fromData.lastName}
                         </p>
+                      </div>
                     </div>
                     <div className="participant d-flex align-items-center">
                       <img
@@ -233,7 +234,65 @@ export default function Conversations() {
                     </button>
                   </div>
                 </div>
+              </div>
             </div>
-        </>
-    );
+          ))}
+        </div>
+
+        {/*<!-- List of conversetions -->*/}
+        <div className="row conversation-list">
+          <div className="col-sm-6 ">
+            {/*<!-- Conversation participants -->*/}
+            <div className="card">
+              <div className="card-body">
+                {/*<!-- Date -->*/}
+                <a className="convo-date" href="./samtaler">
+                  Dato
+                </a>
+                {/*<!-- Conversation participants -->*/}
+                <div className="participants">
+                  <div className="participant">
+                    <img
+                      src={dummyProfile}
+                      alt="P"
+                      className="rounded-circle"
+                    />
+                    <div className="ms-3">
+                      <p className="fw-bold mb-1">Person En</p>
+                    </div>
+                  </div>
+
+                  <div className="participant d-flex align-items-center">
+                    <img
+                      src={dummyProfile}
+                      alt="P"
+                      className="rounded-circle"
+                    />
+                    <div className="ms-3">
+                      <p className="fw-bold mb-1">Person To</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/*<!-- Buttons -->*/}
+                <div className="text-end">
+                  <button className="btn-download btn-link btn-rounded btn-sm">
+                    Last ned samtale
+                  </button>
+                  <button className="btn-delete btn-link btn-rounded btn-sm">
+                    Slett samtale
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="master-buttons">
+          <button className="btn-download-all">Last ned alle</button>
+          <button className="btn-delete-all">Slett alle</button>
+        </div>
+      </div>
+    </>
+  );
 }

@@ -56,18 +56,6 @@ module.exports = {
             })
         );
 
-<<<<<<< HEAD
-  getUser: async (req, res) => {
-    await User.findById(req.params.userId, "firstName lastName").exec()
-    .then((user) => {
-      return res.status(200).send(user);
-    })
-    .catch((error) => {
-      console.log(error);
-      return res.status(500).send("Error getting contacts");
-    });
-  },
-=======
         const allContacts = Object.values(similarContactsDict)
             .map((x) => {
                 if (x.intrests.length === 0) {
@@ -95,7 +83,6 @@ module.exports = {
                     };
                 })
             );
->>>>>>> origin/master
 
         // remove duplicates
         const uniqueContactsSet = new Set(
@@ -145,6 +132,26 @@ module.exports = {
             myContacts: uniqueMyContacts.filter(
                 (x) => x._id.toString() !== userId
             ),
+        });
+    },
+    getUser: async (req, res) => {
+        await User.findById(req.params.userId, "firstName lastName").exec()
+        .then((user) => {
+            return res.status(200).send(user);
+        })
+        .catch((error) => {
+            console.log(error);
+            return res.status(500).send("Error getting contacts");
+        });
+    },
+    getAllUsers: async (req, res) => {
+        await User.findById(req.params.userId, "firstName lastName").exec()
+        .then((user) => {
+            return res.status(200).send(user);
+        })
+        .catch((error) => {
+            console.log(error);
+            return res.status(500).send("Error getting contacts");
         });
     },
     add: (req, res, next) => {
