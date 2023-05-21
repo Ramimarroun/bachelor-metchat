@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 const Contacts = require("../models/contacts");
 const Conversations = require("../models/conversations");
->>>>>>> origin/master
 const Messages = require("../models/messages");
 const messages = require("../models/messages");
 const User = require("../models/user");
@@ -134,7 +131,6 @@ module.exports = {
             });
         });
     },
-<<<<<<< HEAD
 
     getConversation: async (req, res) => {
         const conversationId = req.params.conversationId;
@@ -202,6 +198,4 @@ module.exports = {
             res.status(200).send("message hase been read");
           });
     },
-=======
->>>>>>> origin/master
 };

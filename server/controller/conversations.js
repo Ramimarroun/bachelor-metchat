@@ -9,6 +9,9 @@ app.post(`/get-all`, verifyaccess, conversations.getAll);
 
 app.get("/conversations/:userId", conversations.conversations);
 app.get("/getAllConversations", conversations.getAllConversations);
+
+app.get("/conversations/:userId", conversations.conversations);
+app.get("/getAllConversations", conversations.getAllConversations);
 app.get(`/:conversationId`, verifyaccess, conversations.get);
 
 app.delete(`/:conversationId`, verifyaccess, conversations.delete);
@@ -21,5 +24,11 @@ app.put("/editTitle", conversations.editTitle);
 
 app.delete("/delete/id", conversations.deleteById);
 app.delete("/delete/names", conversations.deleteByName);
+
+app.get(`/:conversationId`, verifyaccess, conversations.get);
+
+app.delete(`/:conversationId`, verifyaccess, conversations.delete);
+
+app.put("/:conversationId", verifyaccess, conversations.finish);
 
 module.exports = app;

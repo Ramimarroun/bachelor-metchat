@@ -1,13 +1,17 @@
 const Conversations = require("../models/conversations");
-<<<<<<< HEAD
-const User = require("../models/user");
-const Messages = require('../models/messages');
-
-=======
 const Users = require("../models/user");
->>>>>>> origin/master
 
 module.exports = {
+    getAllConversations: async (req, res) => {
+        await Conversations.find().sort({ createdAt: 1 }).exec()
+        .then((conversations) => {
+            return res.status(200).send(conversations);
+        })
+        .catch((err) => {
+            return res.status(500).send("Failed to load conversations:\r\n:" + err);
+        });        
+    },
+
     getAll: async (req, res, next) => {
         const userId = req.userId;
         const contactId = req.body.contactId;
@@ -45,29 +49,6 @@ module.exports = {
                 .replace(/(\d+)\/(\d+)\/(\d+)/, "$3/$1/$2");
         }
 
-<<<<<<< HEAD
-    conversations: async (req, res) => {
-        const userId = req.params.userId;
-
-        await Conversations.find({$or: [{fromId: userId}, {toId: userId}]}).sort({ updatedAt: 1 }).exec()
-        .then((conversations) => {
-            return res.status(200).send(conversations);
-        })
-        .catch((err) => {
-            return res.status(500).send("Failed to load conversations:\r\n" + err);
-        });        
-    },
-
-    getAllConversations: async (req, res) => {
-        await Conversations.find().sort({ createdAt: 1 }).exec()
-        .then((conversations) => {
-            return res.status(200).send(conversations);
-        })
-        .catch((err) => {
-            return res.status(500).send("Failed to load conversations:\r\n:" + err);
-        });        
-    },
-=======
         // Check if conversation with the same title exists for these users
         const existingConversation = await Conversations.findOne({
             $or: [
@@ -95,7 +76,6 @@ module.exports = {
             toUserId,
             title,
         });
->>>>>>> origin/master
 
         conversation.save((err, createResult) => {
             if (err)
@@ -150,35 +130,6 @@ module.exports = {
             }
         );
     },
-
-<<<<<<< HEAD
-    /* Conversation.findById(conversationId).populate('messages').exec((err, conversation) => {
-    if (err) {
-      return res.status(500).send('Failed to fetch conversation');
-    }
-    if (!conversation) {
-      return res.status(404).send('Conversation not found');
-    }
-    return res.status(200).send(conversation);
-    }),*/
-
-
-};
-=======
-    // getAll: (req, res, next) => {
-    //     Conversations.find(
-    //         { fromUserId: req.userId, toUserId: req.body.toUserId },
-
-    //         (err, result) => {
-    //             if (err)
-    //                 return res.send({
-    //                     status: false,
-    //                     message: "data base error",
-    //                 });
-    //             return res.send({ status: true, conversation: result });
-    //         }
-    //     );
-    // },
     delete: (req, res, next) => {
         Conversations.findOneAndRemove(
             { _id: req.params.conversationId },
@@ -214,4 +165,3 @@ module.exports = {
         );
     },
 };
->>>>>>> origin/master
