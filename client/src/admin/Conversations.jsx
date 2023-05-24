@@ -7,96 +7,33 @@ import { useAccount } from "../app/account-context";
 
 import AdminNav from "../components/AdminNav";
 import dummyProfile from "../assets/img/profile.svg";
+import { adminApi } from "../api/admin-api";
+import { Contact } from "../components/contact";
+import { Flex } from "../components/Flex";
+import { conversationApi } from "../api/conversation-api";
 
 export default function Conversations() {
-  const navigate = useNavigate(),
-    csvInstance = useRef(),
-    account = useAccount(),
-    // [self, setSelf] = useState({}),
+  const csvInstance = useRef(),
     [conversations, setConversations] = useState([]),
+    [messages, setMessages] = useState(""),
     [csvData, setCsvData] = useState([]),
     [csvFilename, setCsvFilename] = useState([]);
 
+  //list all conversations **
   useEffect(() => {
-    async function fetchData() {
-      if (!localStorage.getItem("metchat-user")) navigate("/");
-      /*
-      else {
-        const data = await JSON.parse(localStorage.getItem("metchat-user"));
-        setSelf(data);
-      }
-      */
-    }
-    fetchData();
-  }, [navigate]);
-
-  // get conversations
-  useEffect(() => { 
-    async function getConversations() {
-      await axios.get(`${conversationRoute}/getAllConversations`)
-      .then(async (response) => {
-        const conversations = response.data,
-          count = conversations.length;
-
-        for (let i = 0; i < count; i++) {
-          const date = new Date(conversations[i].createdAt),
-            year = date.getFullYear();
-          let month = date.getMonth() + 1,
-            day = date.getDate(),
-            hour = date.getHours(),
-            minute = date.getMinutes();
-
-          if (month < 10) month = "0" + month;
-          if (day < 10) day = "0" + day;
-          if (hour < 10) hour = "0" + hour;
-          if (minute < 10) minute = "0" + minute;
-
-          conversations[i].createdAtText = `${day}/${month}/${year} - ${hour}:${minute}`;
-
-          // fetch data of user 1
-          await axios.get(`${contactRoute}/getUser/${conversations[i].fromId}`)
-          .then((response) => {
-            conversations[i]["fromData"] = response.data;
-          })
-          .catch((err) => {
-            conversations[i]["fromData"] = [];
-            alert(err.response.data);
-          });
-
-          // fetch data of user 2
-          await axios.get(`${contactRoute}/getUser/${conversations[i].toId}`)
-          .then((response) => {
-            conversations[i]["toData"] = response.data;
-          })
-          .catch((err) => {
-            conversations[i]["toData"] = [];
-            alert(err.response.data);
-          });
-
-          /*
-          // fetch messages
-          await axios.get(`${conversationRoute}/${conversations[i]._id}/messages`)
-          .then((response) => {
-            conversations[i]["messages"] = response.data.map(message => message.text).join('\n');
-          }) 
-          .catch((err) => {
-            conversations[i]["messages"] = "";
-            alert(err.response.data);
-          });
-          */
-        }
-        setConversations(conversations);
-      })
-      .catch((err) => {
-        console.log(err);
-        alert(err.response.data);
-      });
-    }
-    getConversations();
-  });
+    adminApi
+      .getAll()
+      .then((result) => setConversations(result.data.conversations))
+      .catch();
+  }, []);
 
   useEffect(() => {
-    if (csvData && csvData.length > 0 && csvFilename && csvInstance?.current?.link) {
+    if (
+      csvData &&
+      csvData.length > 0 &&
+      csvFilename &&
+      csvInstance?.current?.link
+    ) {
       setTimeout(() => {
         // console.log(csvData);
         csvInstance.current.link.click();
@@ -108,30 +45,51 @@ export default function Conversations() {
 
   // csv headers
   const headers = [
-    { label: "Date", key: "dateText"},
-    { label: "Time", key: "timeText"},
-    { label: "Sender", key: "fromId"},
-    { label: "Receiver", key: "toId"},
+    { label: "Date", key: "dateText" },
+    { label: "Time", key: "timeText" },
+    { label: "Sender", key: "fromId" },
+    { label: "Receiver", key: "toId" },
     { label: "Messages", key: "message" },
   ];
 
   const getCsvData = async (id, title) => {
-    await axios.get(`${messageRoute}/getConversation/${id}`)
-    .then((response) => {
-      setCsvData(response.data.map((value) => {
-        const dateTime = value.createdAt.split("T");
+    await adminApi
+      .getConversation(id)
+      .then((response) => {
+        setCsvData(
+          response.data.map((value) => {
+            const dateTime = value.createdAt.split("T");
 
-        value.dateText = dateTime[0];
-        value.timeText = dateTime[1].slice(0, 8);
+            value.dateText = dateTime[0];
+            value.timeText = dateTime[1].slice(0, 8);
 
-        return value;
-      }));
-      setCsvFilename(`${id}_${title}.csv`);
-    })
-    .catch((err) => {
-      console.log(err);
-      alert(err.response.data);
+            return value;
+          })
+        );
+        setCsvFilename(`${id}_${title}.csv`);
+      })
+      .catch((err) => {
+        console.log(err);
+        alert(err.response.data);
+      });
+  };
+
+  function formatDateTime(dateStr) {
+    const date = new Date(dateStr);
+
+    const formattedDate = date.toLocaleDateString("no-NO", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
+
+    const formattedTime = date.toLocaleTimeString("no-NO", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    var result = formattedDate + " " + formattedTime;
+    return result;
   }
 
   return (
@@ -168,181 +126,84 @@ export default function Conversations() {
         </section>
 
         {/*<!-- List of conversetions -->*/}
-        <div className="row conversation-list">
-          {conversations.map((conversation, i) => (
-            <div key={i} className="col-sm-6 ">
-              {/*<!-- Conversation participants -->*/}
-              <div className="card">
-                <div className="card-body">
-                  {/*<!-- Date -->*/}
-                  <a className="convo-date" href="./samtaler">
-                    {conversation.createdAtText}
-                  </a>
-                  {conversation._id}
-                  {conversation.title}
 
-                  {/*<!-- Conversation participants -->*/}
-                  <div className="participants">
+        <div className="container-fluid">
+          <div className="row g-3">
+            {conversations.map((x, idx) => {
+              return (
+                <div className="col-md-6">
+                  <div key={idx} className="border shadow mb-2 p-3 convo">
+                    <div className="mb-3">
+                      <span className="convo-date">
+                        {formatDateTime(x.createdAt)}
+                      </span>
+                      <span className="convo-date">Tittel: {x.title}</span>
+                    </div>
                     <div className="participant">
-                      <img
-                        src={dummyProfile}
-                        alt="P"
-                        className="rounded-circle"
+                      <Contact
+                        contact={{
+                          name:
+                            x.fromUserId.firstName +
+                            " " +
+                            x.fromUserId.lastName,
+                        }}
+                        showEmail={false}
+                        className="mb-0"
                       />
-                      <div className="ms-3">
-                        <p className="fw-bold mb-1">
-                          {conversation.fromData.firstName}{" "}
-                          {conversation.fromData.lastName}
-                        </p>
-                      </div>
                     </div>
-                    <div className="participant d-flex align-items-center">
-                      <img
-                        src={dummyProfile}
-                        alt="P"
-                        className="rounded-circle"
+                    <div className="participant">
+                      <Contact
+                        contact={{
+                          name:
+                            x.toUserId.firstName + " " + x.toUserId.lastName,
+                        }}
+                        showEmail={false}
+                        className="m-0"
                       />
-                      <div className="ms-3">
-                        <p className="fw-bold mb-1">
-                          {conversation.toData.firstName}{" "}
-                          {conversation.toData.lastName}
-                        </p>
-                      </div>
                     </div>
-                  </div>
-
-                  {/*<!-- Buttons -->*/}
-                  <div className="text-end">{/* CSV download link */}
-                    <button
-                      className="btn-download btn-link btn-rounded btn-sm"
-                      onClick={() => getCsvData(conversation._id, conversation.title)}
-                    >
-                      Last ned samtale
-                    </button>
-                    {csvData.length > 0 && csvFilename ?
-                      <CSVLink
-                        // className="btn-download btn-link btn-rounded btn-sm"
-                        data={csvData}
-                        headers={headers}
-                        filename={csvFilename}
-                        ref={csvInstance}
-                        target="_blank"
-                        asyncOnClick={true}
-                        // onClick={(event, done) => { getCsvData(event, done, conversation._id); }}
-                      />
-                    : undefined}
-                    <button className="btn-delete btn-link btn-rounded btn-sm">
-                      Slett samtale
-                    </button>
+                    {/* --- Conversation buttons --- */}
+                    <Flex gap={2}>
+                      <button
+                        className="btn"
+                        onClick={() => getCsvData(x._id, x.title)}
+                      >
+                        Last ned
+                      </button>
+                      {csvData.length > 0 && csvFilename ? (
+                        <CSVLink
+                          // className="btn-download btn-link btn-rounded btn-sm"
+                          data={csvData}
+                          headers={headers}
+                          filename={csvFilename}
+                          ref={csvInstance}
+                          target="_blank"
+                          asyncOnClick={true}
+                          // onClick={(event, done) => { getCsvData(event, done, conversation._id); }}
+                        />
+                      ) : undefined}
+                      <button
+                        className="btn"
+                        onClick={() =>
+                          conversationApi
+                            .delete(x._id)
+                            .then(({ data }) => {
+                              setConversations(
+                                conversations.filter((v) => v._id !== x._id)
+                              );
+                            })
+                            .catch(() => alert("error"))
+                        }
+                      >
+                        Slett
+                      </button>
+                    </Flex>
                   </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/*<!-- List of conversetions -->*/}
-        <div className="row conversation-list">
-          <div className="col-sm-6 ">
-            {/*<!-- Conversation participants -->*/}
-            <div className="card">
-              <div className="card-body">
-                {/*<!-- Date -->*/}
-                <a className="convo-date" href="./samtaler">
-                  Dato
-                </a>
-                {/*<!-- Conversation participants -->*/}
-                <div className="participants">
-                  <div className="participant">
-                    <img
-                      src={dummyProfile}
-                      alt="P"
-                      className="rounded-circle"
-                    />
-                    <div className="ms-3">
-                      <p className="fw-bold mb-1">Person En</p>
-                    </div>
-                  </div>
-        {/*<!-- List of conversetions -->*/}
-        <div className="row conversation-list">
-          <div className="col-sm-6 ">
-            {/*<!-- Conversation participants -->*/}
-            <div className="card">
-              <div className="card-body">
-                {/*<!-- Date -->*/}
-                <a className="convo-date" href="./samtaler">
-                  Dato
-                </a>
-                {/*<!-- Conversation participants -->*/}
-                <div className="participants">
-                  <div className="participant">
-                    <img
-                      src={dummyProfile}
-                      alt="P"
-                      className="rounded-circle"
-                    />
-                    <div className="ms-3">
-                      <p className="fw-bold mb-1">Person En</p>
-                    </div>
-                  </div>
-
-                  <div className="participant d-flex align-items-center">
-                    <img
-                      src={dummyProfile}
-                      alt="P"
-                      className="rounded-circle"
-                    />
-                    <div className="ms-3">
-                      <p className="fw-bold mb-1">Person To</p>
-                    </div>
-                  </div>
-                </div>
-                  <div className="participant d-flex align-items-center">
-                    <img
-                      src={dummyProfile}
-                      alt="P"
-                      className="rounded-circle"
-                    />
-                    <div className="ms-3">
-                      <p className="fw-bold mb-1">Person To</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/*<!-- Buttons -->*/}
-                <div className="text-end">
-                  <button className="btn-download btn-link btn-rounded btn-sm">
-                    Last ned samtale
-                  </button>
-                  <button className="btn-delete btn-link btn-rounded btn-sm">
-                    Slett samtale
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-                {/*<!-- Buttons -->*/}
-                <div className="text-end">
-                  <button className="btn-download btn-link btn-rounded btn-sm">
-                    Last ned samtale
-                  </button>
-                  <button className="btn-delete btn-link btn-rounded btn-sm">
-                    Slett samtale
-                  </button>
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
 
-        <div className="master-buttons">
-          <button className="btn-download-all">Last ned alle</button>
-          <button className="btn-delete-all">Slett alle</button>
-        </div>
-      </div>
-    </>
-  );
         <div className="master-buttons">
           <button className="btn-download-all">Last ned alle</button>
           <button className="btn-delete-all">Slett alle</button>
